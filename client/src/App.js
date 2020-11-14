@@ -8,6 +8,8 @@ import TableBody from '@material-ui/core/TableBody';
 import TableRow from '@material-ui/core/TableRow';
 import TableCell from '@material-ui/core/TableCell';
 import {withStyles} from '@material-ui/core/styles';
+import CircularProgress from '@material-ui/core/CircularProgress';
+
 
 const styles = theme =>({
   root:{
@@ -17,37 +19,40 @@ const styles = theme =>({
   },
   table:{
     minWidth:1080
+  },
+  progress:{
+    margin: theme.spacing.unit*2
   }
 })
 
 
-const customers =[{
-  'id':1,
-  'image':'https://placeimg.com/64/64/1',
-  'name': '홍길동',
-  'birthday': '000817',
-  'gender':'남자',
-  'job':'무직'
-},
-{
-  'id':2,
-  'image':'https://placeimg.com/64/64/2',
-  'name': '체윤서',
-  'birthday': '000617',
-  'gender':'여자',
-  'job':'무직'
-},
-{
-  'id':3,
-  'image':'https://placeimg.com/64/64/3',
-  'name': '문지웅',
-  'birthday': '000817',
-  'gender':'남자',
-  'job':'무직'
-}]
-
 class App extends Component
 {
+  state={
+    customers: "",
+    completed:0
+  }
+
+  progress=()=>{
+    const{completed}=this.state;
+    this.setState({completed: completed>=100?0:completed+1});
+  }
+  callApi=async()=>{
+    const response=await fetch('http://localhost:5000/api/customers');
+    const body=await response.json();
+    console.log(response);
+    return body;
+  }
+  componentDidMount(){
+    this.timer =setInterval(this.progress,20);
+    this.callApi()
+      .then(response=>this.setState({customers:response}))
+      .catch(err=>console.log(err));
+
+  }
+
+
+
   render(){
     const {classes}=this.props;
     return (
@@ -64,7 +69,7 @@ class App extends Component
          </TableRow>
        </TableHead>
        <TableBody>
-       {customers.map(member=>{
+       {this.state.customers ? this.state.customers.map(member=>{
         return(
           <Customer
           key={member.id}/*key라는 props 꼭 사용해주기*/ 
@@ -76,7 +81,12 @@ class App extends Component
           job={member.job}
           />
         )
-      })}
+      }):<TableRow>
+        <TableCell colSpan="6" align="center">
+          <CircularProgress className={classes.progress} variant="determinate" value={this.state.completed}/>
+        </TableCell>
+        
+        </TableRow>}
        </TableBody>
 
 
